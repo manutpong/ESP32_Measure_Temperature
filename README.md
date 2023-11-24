@@ -35,21 +35,21 @@ link = https://www.electronicshub.org/esp32-i2c-lcd/
             4.2 ให้ทำการ Finding the Slave Address of I2C LCD Module
             4.3 เขียนคำสั่งแสดง             /
 -----------------------------------------------
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-LiquidCrystal_I2C lcd(0x3F, 16, 2);
-void setup()
-{
-  lcd.init();
-  lcd.backlight();
-  lcd.setCursor(0,0);
-  lcd.print("  I2C LCD with ");
-  lcd.setCursor(0,1);
-  lcd.print("  ESP32 DevKit ");
-  //delay(2000);
-}
-void loop()
-{
-}
+            #include <Wire.h> 
+            #include <LiquidCrystal_I2C.h>
+            LiquidCrystal_I2C lcd(0x3F, 16, 2);
+            void setup()
+            {
+              lcd.init();
+              lcd.backlight();
+              lcd.setCursor(0,0);
+              lcd.print("  I2C LCD with ");
+              lcd.setCursor(0,1);
+              lcd.print("  ESP32 DevKit ");
+              //delay(2000);
+            }
+            void loop()
+            {
+            }
 -----------------------------------------------
 
