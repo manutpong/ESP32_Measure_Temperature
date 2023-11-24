@@ -1,4 +1,4 @@
-# ESP32Autoconnect01
+# ESP32_Measure_Temperature
 1. Load Library Autoconnect
 2. Default Code (WIFI Password default 12345678)
             ที่มา = https://meetjoeblog.com/2021/05/04/autoconnect-wifi-manager/
