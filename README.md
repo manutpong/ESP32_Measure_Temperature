@@ -27,3 +27,7 @@
           Portal.handleClient();
       }
 -----------------------------------------------
+3.ติดตั้ง DHT11 for ESP32
+![image](https://github.com/manutpong/ESP32Autoconnect01/assets/4971040/272ce1e7-50de-4f02-bf68-1629af1b0a57)
+
+
