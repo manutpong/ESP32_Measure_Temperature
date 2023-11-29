@@ -2,6 +2,7 @@
 Design simulate : https://wokwi.com/projects/382703786363809793
 Diagram
 ![image](https://github.com/manutpong/ESP32_Measure_Temperature/assets/4971040/398f810e-ba40-4857-a211-f87523cd164c)
+![image](https://github.com/manutpong/ESP32_Measure_Temperature/assets/4971040/6ebd1d05-7468-4207-b448-572971ef7a29)
 
 Please see folder = ESP32_Temperature
 
