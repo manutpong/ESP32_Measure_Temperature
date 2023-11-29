@@ -1,3 +1,12 @@
+******************************************************
+Design simulate : https://wokwi.com/projects/382703786363809793
+Diagram
+![image](https://github.com/manutpong/ESP32_Measure_Temperature/assets/4971040/398f810e-ba40-4857-a211-f87523cd164c)
+
+Please see folder = ESP32_Temperature
+
+********************************************************
+
 # ESP32_Measure_Temperature
 1. Load Library Autoconnect
 2. Default Code (WIFI Password default 12345678)
