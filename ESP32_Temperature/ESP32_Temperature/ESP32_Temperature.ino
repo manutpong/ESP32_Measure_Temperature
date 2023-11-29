@@ -28,12 +28,15 @@ int LED16 = 16; // Pin D16
 int LED4 = 4;   // Pin  D4
 // Count time 150 = 150
 int istime = 0;
+// check status
+boolean isover= false;
 
 
 void setup() {
   Serial.begin(9600);
   // For Clear
   istime = 0;
+  isover = false;
   // For DHT
   dht.begin();
   // For LCD
@@ -65,29 +68,38 @@ void setup() {
 void loop() {
   delay(2000);
 if (WiFi.status() == WL_CONNECTED) {
+    
     lcd.setCursor(0,0);
-    lcd.print("IP : "+String(WiFi.localIP()));
+    lcd.print("IP : "+WiFi.localIP().toString());
  if(digitalRead(but) == HIGH){
+         
       //******** Read Temperature
       float t = dht.readTemperature();
-       
+      Serial.println("istime"+String(istime));
+      lcd.setCursor(0,1);
+      lcd.print("Temp :" + String(t) + " C");
+              Serial.println("Temp :" +  String(t) + " C");
+
+
+
       if (!isnan(t) ) { //0 = number
-
-          lcd.setCursor(0,1);
-          lcd.print("Temp :" + String(t) + " C");
-          Serial.println("Temp :" +  String(t) + " C");
-
           if (t > 50){
-            if (istime == 0){
-              NotifyLine("ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
-              istime++;
-            }else{
-              istime++;
-              if(istime ==150)istime = 0;
-            }
+                 
+                  if (istime == 0){
+                    NotifyLine("ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
+                    istime++;
+                  }else{
+                    istime++;
+                    if(istime ==150)istime = 0;
+                  }
+              isover = true;
             digitalWrite(LED16, HIGH);
             digitalWrite(LED4, LOW);
           }else{
+              if(isover){
+                NotifyLine("อุณหภูมิกลับมาปกติ : " + String(t) + " C");
+                isover = false;
+              }
             digitalWrite(LED16, LOW);
             digitalWrite(LED4, HIGH);
           }
@@ -95,7 +107,7 @@ if (WiFi.status() == WL_CONNECTED) {
       }else{
            lcd.setCursor(0,1);
            lcd.print("Failed read DHT !");
-         Serial.println(F("Failed to read from DHT sensor!"));
+         Serial.println("Failed to read from DHT sensor!");
       }
  }else{
   // Pressed Test
