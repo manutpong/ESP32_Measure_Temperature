@@ -108,7 +108,7 @@ void loop() {
         lcd.setCursor(0, 1);
         lcd.print(" Let's Start     ");
         Serial.println("       Let's Start       ");
-        NotifyLine("เริ่มต้นตรวจจับอุณหภูมิ !!");
+        //NotifyLine("เริ่มต้นตรวจจับอุณหภูมิ !!");
       }else{
         befor_str--;
       }
@@ -122,7 +122,7 @@ void loop() {
     } else {
       
       if (befor_str == 0 && isstart == false) {
-        NotifyLine("เริ่มต้นตรวจจับอุณหภูมิ !!");
+        NotifyLine("Device 01 : เริ่มต้นตรวจจับอุณหภูมิ !!");
         isstart = true;
       }
       if (digitalRead(but) == HIGH) {
@@ -135,21 +135,21 @@ void loop() {
         Serial.println("istime" + String(istime));
         if (!isnan(t))  //0 = number
         {
-          if (t > 25) {
+          if (t > 35) {
             istimedht = 0;
             if (istime == 0) {
-              NotifyLine("ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
+              NotifyLine("Device 01 : ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
               istime++;
             } else {
               istime++;
-              if (istime == 150) istime = 0;
+              if (istime == 75) istime = 0;
             }
             isover = true;
             digitalWrite(LED16, LOW);  //red
             digitalWrite(LED4, HIGH);  //blue
           } else {
             if (isover) {
-              NotifyLine("อุณหภูมิกลับมาปกติ : " + String(t) + " C");
+              NotifyLine("Device 01 : อุณหภูมิกลับมาปกติ : " + String(t) + " C");
               isover = false;
               istime = 0;
             }
@@ -162,11 +162,11 @@ void loop() {
                 lcd.setCursor(0, 1);
                 lcd.print("Failed read DHT!");
                 Serial.println("Failed to read from DHT sensor!");
-                NotifyLine("ไม่สามารถเชือมต่อกับ Sensor ได้");
+                NotifyLine("Device 01 : ไม่สามารถเชือมต่อกับ Sensor ได้");
                 istimedht++;
             } else {
               istimedht++;
-              if (istimedht == 150) istimedht = 0;
+              if (istimedht == 75) istimedht = 0;
             }
             
             digitalWrite(LED16, HIGH);  //red
@@ -177,7 +177,7 @@ void loop() {
         clearRow(1);
         lcd.setCursor(0, 1);
         lcd.print("   TEST !!!  ");
-        NotifyLine(" Test ");
+        NotifyLine("Device 01 :  Test ");
         digitalWrite(LED16, HIGH);
         digitalWrite(LED4, HIGH);
       }
