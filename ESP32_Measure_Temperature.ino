@@ -11,17 +11,15 @@
 #include <HTTPClient.h>
 
 // Define WIFI
-#define SSID "Wokwi-GUEST"                                        // บรรทัดที่ 11 ให้ใส่ ชื่อ Wifi ที่จะเชื่อมต่อ
-#define PASSWORD ""                                               // บรรทัดที่ 12 ใส่ รหัส Wifi
-#define LINE_TOKEN "J8zlEXAVHmuWpm0C2gdjyEzNfTqGhBmsMU29XDOeHVT"  // บรรทัดที่ 13 ใส่ รหัส TOKEN ที่ได้มาจากข้างบน
+#define SSID "Wokwi-GUEST"                                        //  ชื่อ Wifi ที่จะเชื่อมต่อ
+#define PASSWORD ""                                               //  รหัส Wifi
+#define LINE_TOKEN "J8zlEXAVHmuWpm0C2gdjyEzNfTqGhBmsMU29XDOeHVT"  // บรรทัดที่ 13 ใส่ รหัส TOKEN ที่ได้มาจากข้างบน Group จริง
+#define LINE_TOKEN_ME "fKoGOjHC4tebUKn07Y2EiW1f5RqphiqjdxLz37EB3hd"  // send me
 // Define DHT
 #define DHTPIN 17
 #define DHTTYPE DHT22  // DHT 22  (AM2302), AM2321
 // Define Button
 #define but 2
-
-
-
 
 //******* Variable
 // Autoconnect
@@ -38,11 +36,14 @@ int LED4 = 4;    // Pin  D4
 int befor_str = 300;
 int istime = 0;
 int istimedht = 0;
+int istimehr = 0; // 1 hour
+
 // check status
 boolean isover = false;
 boolean isoverdht = false;
 boolean isstart = false;
-
+// For Test
+int test1 = 0;
 void rootPage() {
   char content[] = "T";
   Server.send(200, "text/plain", content);
@@ -58,6 +59,7 @@ void setup() {
   // For Clear
   befor_str = 300;
   istime = 0;
+  istimehr = 0;
   isover = false;
   istimedht = 0;
   isoverdht = false;
@@ -120,14 +122,25 @@ void loop() {
 
       // Delay Befor start
     } else {
-      
+
+
       if (befor_str == 0 && isstart == false) {
-        NotifyLine("Device 01 : เริ่มต้นตรวจจับอุณหภูมิ !!");
+        NotifyLine("Device 02 : เริ่มต้นตรวจจับอุณหภูมิ !!");
         isstart = true;
       }
       if (digitalRead(but) == HIGH) {
-        //******** Read Temperature
+ //******** Read Temperature
         float t = dht.readTemperature();
+        //*******  For Test Befor DHT
+        //if (test1 > 10) {
+        //  t = 27;  
+        //}else{
+        //  t = 20;
+        //}
+        //test1++;
+      
+      //*******  For Test Befor DHT
+
         clearRow(1);
         lcd.setCursor(0, 1);
         lcd.print("Temp :" + String(t) + " C");
@@ -135,26 +148,34 @@ void loop() {
         Serial.println("istime" + String(istime));
         if (!isnan(t))  //0 = number
         {
-          if (t > 35) {
+          istimehr++; // for noti 1 hour
+             //******** Count 1 HR
+
+              if (istimehr >= 1800){
+                istimehr = 0;
+                NotifyLine("Device 02 : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
+              }
+              //********
+          if (t > 30) {
             istimedht = 0;
             if (istime == 0) {
-              NotifyLine("Device 01 : ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
+              NotifyLine("Device 02 : ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
               istime++;
             } else {
               istime++;
               if (istime == 75) istime = 0;
             }
             isover = true;
-            digitalWrite(LED16, LOW);  //red
-            digitalWrite(LED4, HIGH);  //blue
+            digitalWrite(LED16, HIGH);  //red
+            digitalWrite(LED4, LOW);  //blue
           } else {
             if (isover) {
-              NotifyLine("Device 01 : อุณหภูมิกลับมาปกติ : " + String(t) + " C");
+              NotifyLine("Device 02 : อุณหภูมิกลับมาปกติ : " + String(t) + " C");
               isover = false;
               istime = 0;
             }
-            digitalWrite(LED16, HIGH);  //red
-            digitalWrite(LED4, LOW);    //blue
+            digitalWrite(LED16, LOW);  //red
+            digitalWrite(LED4, HIGH);    //blue
           }
         } else {
              if (istimedht == 0) {
@@ -162,7 +183,7 @@ void loop() {
                 lcd.setCursor(0, 1);
                 lcd.print("Failed read DHT!");
                 Serial.println("Failed to read from DHT sensor!");
-                NotifyLine("Device 01 : ไม่สามารถเชือมต่อกับ Sensor ได้");
+                NotifyLine("Device 02 : ไม่สามารถเชือมต่อกับ Sensor ได้");
                 istimedht++;
             } else {
               istimedht++;
@@ -177,7 +198,7 @@ void loop() {
         clearRow(1);
         lcd.setCursor(0, 1);
         lcd.print("   TEST !!!  ");
-        NotifyLine("Device 01 :  Test ");
+        NotifyLine("Device 02 :  Test ");  
         digitalWrite(LED16, HIGH);
         digitalWrite(LED4, HIGH);
       }
