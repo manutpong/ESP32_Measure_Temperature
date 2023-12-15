@@ -11,17 +11,16 @@
 #include <HTTPClient.h>
 
 // Define WIFI
-#define SSID "Wokwi-GUEST"                                        //  ชื่อ Wifi ที่จะเชื่อมต่อ
-#define PASSWORD ""                                               //  รหัส Wifi
-#define LINE_TOKEN "J8zlEXAVHmuWpm0C2gdjyEzNfTqGhBmsMU29XDOeHVT"  // บรรทัดที่ 13 ใส่ รหัส TOKEN ที่ได้มาจากข้างบน Group จริง
-#define LINE_TOKEN_ME "fKoGOjHC4tebUKn07Y2EiW1f5RqphiqjdxLz37EB3hd"  // send me
+#define SSID "Private"                                           //  ชื่อ Wifi ที่จะเชื่อมต่อ
+#define PASSWORD ""                                                  //  รหัส Wifi
+#define LINE_TOKEN "J8zlEXAVHmuWpm0C2gdjyEzNfTqGhBmsMU29XDOeHVT"     // รหัส TOKEN 
+#define LINE_TOKEN_ME "fKoGOjHC4tebUKn07Y2EiW1f5RqphiqjdxLz37EB3hd"  // รหัส Token ทดสอบ send me
 // Define DHT
 #define DHTPIN 17
 #define DHTTYPE DHT22  // DHT 22  (AM2302), AM2321
 // Define Button
 #define but 2
-
-//******* Variable
+//******* Variable*************************************
 // Autoconnect
 WebServer Server;
 AutoConnect Portal(Server);
@@ -36,14 +35,13 @@ int LED4 = 4;    // Pin  D4
 int befor_str = 300;
 int istime = 0;
 int istimedht = 0;
-int istimehr = 0; // 1 hour
-
+int istimehr = 0;  // 1 hour
 // check status
 boolean isover = false;
 boolean isoverdht = false;
 boolean isstart = false;
-// For Test
-int test1 = 0;
+
+
 void rootPage() {
   char content[] = "T";
   Server.send(200, "text/plain", content);
@@ -53,6 +51,7 @@ void clearRow(byte rowToClear) {
   lcd.setCursor(0, rowToClear);
   lcd.print("                ");
 }
+
 void setup() {
   Serial.begin(115200);
   delay(1000);
@@ -64,20 +63,19 @@ void setup() {
   istimedht = 0;
   isoverdht = false;
   isstart = false;
-  // For DHT
+  // Initial DHT
   dht.begin();
-
-  // For LED
+  // Initial LED
   pinMode(LED16, OUTPUT);
   pinMode(LED4, OUTPUT);
   digitalWrite(LED16, LOW);
   digitalWrite(LED4, LOW);
-  // For Button
+  // Initial Button
   pinMode(but, INPUT);  // Pull down
-  // For LCD
+  // Initial LCD
   lcd.init();
   lcd.backlight();
-  // For Conenct WIFI
+  // Initial Conenct WIFI
   Serial.println();
   clearRow(0);
   lcd.setCursor(0, 0);
@@ -94,15 +92,12 @@ void setup() {
 
 void loop() {
   Portal.handleClient();
-  delay(2000);
+  delay(2000); // DHT22 Support Delay 2 sec
   if (WiFi.status() == WL_CONNECTED) {
     clearRow(0);
     lcd.setCursor(0, 0);
     lcd.print("IP:" + WiFi.localIP().toString());
     // Delay befor start*****************
-
-
-
     if (befor_str > 0) {
       if (digitalRead(but) == LOW) {
         befor_str = 0;
@@ -110,8 +105,7 @@ void loop() {
         lcd.setCursor(0, 1);
         lcd.print(" Let's Start     ");
         Serial.println("       Let's Start       ");
-        //NotifyLine("เริ่มต้นตรวจจับอุณหภูมิ !!");
-      }else{
+      } else {
         befor_str--;
       }
       clearRow(1);
@@ -119,27 +113,16 @@ void loop() {
       lcd.print("Delay :" + String(befor_str));
       Serial.println("Delay :" + String(befor_str));
       delay(1000);
-
       // Delay Befor start
     } else {
-
+      if (digitalRead(but) == HIGH) {
+        //******** Read Temperature
+        float t = dht.readTemperature();
 
       if (befor_str == 0 && isstart == false) {
         NotifyLine("Device 02 : เริ่มต้นตรวจจับอุณหภูมิ !!");
         isstart = true;
       }
-      if (digitalRead(but) == HIGH) {
- //******** Read Temperature
-        float t = dht.readTemperature();
-        //*******  For Test Befor DHT
-        //if (test1 > 10) {
-        //  t = 27;  
-        //}else{
-        //  t = 20;
-        //}
-        //test1++;
-      
-      //*******  For Test Befor DHT
 
         clearRow(1);
         lcd.setCursor(0, 1);
@@ -148,15 +131,17 @@ void loop() {
         Serial.println("istime" + String(istime));
         if (!isnan(t))  //0 = number
         {
-          istimehr++; // for noti 1 hour
-             //******** Count 1 HR
+          istimehr++;  // for noti 1 hour
+                       //******** Count 1 HR
 
-              if (istimehr >= 1800){
-                istimehr = 0;
-                NotifyLine("Device 02 : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
-              }
-              //********
-          if (t > 30) {
+          if (istimehr >= 1800) {
+            istimehr = 0;
+            NotifyLine("Device 02 : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
+          }else if(istimehr == 1) {
+            NotifyLine("Device 02 : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
+          }
+          //********
+          if (t > 25) {
             istimedht = 0;
             if (istime == 0) {
               NotifyLine("Device 02 : ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
@@ -167,7 +152,7 @@ void loop() {
             }
             isover = true;
             digitalWrite(LED16, HIGH);  //red
-            digitalWrite(LED4, LOW);  //blue
+            digitalWrite(LED4, LOW);    //blue
           } else {
             if (isover) {
               NotifyLine("Device 02 : อุณหภูมิกลับมาปกติ : " + String(t) + " C");
@@ -175,30 +160,33 @@ void loop() {
               istime = 0;
             }
             digitalWrite(LED16, LOW);  //red
-            digitalWrite(LED4, HIGH);    //blue
+            digitalWrite(LED4, HIGH);  //blue
           }
         } else {
-             if (istimedht == 0) {
-                clearRow(1);
-                lcd.setCursor(0, 1);
-                lcd.print("Failed read DHT!");
-                Serial.println("Failed to read from DHT sensor!");
-                NotifyLine("Device 02 : ไม่สามารถเชือมต่อกับ Sensor ได้");
-                istimedht++;
-            } else {
-              istimedht++;
-              if (istimedht == 75) istimedht = 0;
-            }
-            
-            digitalWrite(LED16, HIGH);  //red
-            digitalWrite(LED4, LOW);    //blue
+          if (istimedht == 0) {
+            clearRow(1);
+            lcd.setCursor(0, 1);
+            lcd.print("Failed read DHT!");
+            Serial.println("Failed to read from DHT sensor!");
+            NotifyLine("Device 02 : ไม่สามารถเชือมต่อกับ Sensor ได้");
+            istimedht++;
+          } else {
+            clearRow(1);
+            lcd.setCursor(0, 1);
+            lcd.print("Failed read DHT!");
+            Serial.println("Failed to read from DHT sensor!");
+            istimedht++;
+            if (istimedht == 75) istimedht = 0;
+          }
+          digitalWrite(LED16, HIGH);  //red
+          digitalWrite(LED4, LOW);    //blue
         }
       } else {
         // Pressed Test
         clearRow(1);
         lcd.setCursor(0, 1);
         lcd.print("   TEST !!!  ");
-        NotifyLine("Device 02 :  Test ");  
+        NotifyLine("Device 02 :  Test ");
         digitalWrite(LED16, HIGH);
         digitalWrite(LED4, HIGH);
       }
@@ -212,7 +200,7 @@ void loop() {
     WiFi.disconnect();
     WiFi.reconnect();
     Serial.println("Reconnect !!");
-     isstart = true;
+    isstart = true;
   }
 }
 
@@ -232,6 +220,8 @@ void NotifyLine(String message) {
     String response = http.getString();
     Serial.println(response);
   } else {
+    lcd.setCursor(0, 0);
+    lcd.print("Disconnect Line Server !!");
     Serial.println("Cannect not connect Line Server");
   }
 
