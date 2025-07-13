@@ -22,12 +22,13 @@ const int   mqtt_port = 1883;
 const char* mqtt_user = "";  // ถ้าไม่มี ไม่ต้องใส่
 const char* mqtt_password = "";
 const char* mqtt_topic = "room/temp1";
+const char* mqtt_topic2 = "room/dashboard";
 // Define DHT
-#define DHTPIN 17
+#define DHTPIN 17 // get temp
 #define DHTTYPE DHT22  // DHT 22  (AM2302), AM2321
 // Define Button
 #define but 2
-
+//#define but 15
 //******* Variable*************************************
 // Autoconnect
 WebServer Server;
@@ -42,12 +43,15 @@ int LED4 = 4;    // Pin  D4
 // Count time 150 = 150
 int befor_str = 300;
 int istime = 0;
+int isupdate = 0;
 int istimedht = 0;
 int istimehr = 0;  // 1 hour
 // check status
 boolean isover = false;
 boolean isoverdht = false;
 boolean isstart = false;
+// Temperature
+float Fixtemp = 0;
 // for mqtt
 WiFiClient espClient;
 PubSubClient mqttClient(espClient);
@@ -68,6 +72,7 @@ void setup() {
   // For Clear
   befor_str = 300;
   istime = 0;
+  isupdate = 0;
   istimehr = 0;
   isover = false;
   istimedht = 0;
@@ -134,39 +139,50 @@ void loop() {
     
         //******** Read Temperature
         float t = dht.readTemperature();
+    
 
+         
       if (befor_str == 0 && isstart == false) {
         ////NotifyLine("Device 02 : เริ่มต้นตรวจจับอุณหภูมิ !!");
-        NotifyMQTT("d3,t,Device : เริ่มต้นตรวจจับอุณหภูมิ !!");
+        NotifyMQTT("d1,Device : เริ่มต้นตรวจจับอุณหภูมิ !!");
         isstart = true;
       }
 
         clearRow(1);
         lcd.setCursor(0, 1);
         lcd.print("Temp :" + String(t) + " C");
-        //Serial.println("Temp :" + String(t) + " C");
-        //Serial.println("istime" + String(istime)); 
         if (!isnan(t))  //0 = number
         {
+
           istimehr++;  // for noti 1 hour
                        //******** Count 1 HR
 
+        if ( t != Fixtemp ){
+          NotifyMQTTDashboard("d1," + String(t));
+          Fixtemp = t;
+        }else if (isupdate >= 150){
+          // ประมาณ 5 นาที
+          NotifyMQTTDashboard("d1," + String(t));
+          isupdate = 0;
+        }
+        isupdate++;
+
+        
           if (istimehr >= 1800) {
             istimehr = 0;
-            ////NotifyLine("Device : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
-            NotifyMQTT("d3,c," + String(t));
+            NotifyMQTT("d1,อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
+//            NotifyMQTT("d1,c," + String(t));
             
           }else if(istimehr == 1) {
-            ////NotifyLine("Device : อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
-            NotifyMQTT("d3,c," + String(t));
+              NotifyMQTT("d1,อุณหภูมิที่ตรวจพบในปัจจุบัน : " + String(t) + " C");
+//            NotifyMQTT("d1,c," + String(t));
           }
           //********
           if (t > 25) {
             istimedht = 0;
             if (istime == 0) {
-              ////NotifyLine("Device 02 : ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
-
-              NotifyMQTT("d3,mc," + String(t));
+             NotifyMQTT("d1,ตรวจพบอุณหภูมิมากกว่าที่กำหนด : " + String(t) + " C");
+//              NotifyMQTT("d1,mc," + String(t));
               istime++;
             } else {
               istime++;
@@ -177,8 +193,8 @@ void loop() {
             digitalWrite(LED4, LOW);    //blue
           } else {
             if (isover) {
-              //NotifyLine("Device 02 : อุณหภูมิกลับมาปกติ : " + String(t) + " C");
-              NotifyMQTT("d3,nc," + String(t));
+              NotifyMQTT("d1, อุณหภูมิกลับมาปกติ : " + String(t) + " C");
+//              NotifyMQTT("d1,nc," + String(t));
               isover = false;
               istime = 0;
             }
@@ -192,7 +208,7 @@ void loop() {
             lcd.print("Failed read DHT!");
             //Serial.println("Failed to read from DHT sensor!");
             //NotifyLine("Device: ไม่สามารถเชือมต่อกับ Sensor ได้");
-            NotifyMQTT("d3,t,Device : ไม่สามารถเชือมต่อกับ Sensor ได้");
+            NotifyMQTT("d1,Device : ไม่สามารถเชือมต่อกับ Sensor ได้");
             istimedht++;
           } else {
             clearRow(1);
@@ -211,7 +227,7 @@ void loop() {
         lcd.setCursor(0, 1);
         lcd.print("   TEST !!!  ");
         //NotifyLine("Device 02 :  Test ");
-        NotifyMQTT("d3,t,Device :  Test ");
+        NotifyMQTT("d1,Device :  Test ");
         digitalWrite(LED16, HIGH);
         digitalWrite(LED4, HIGH);
       }
@@ -235,6 +251,10 @@ void reconnectMQTT() {
     if (mqttClient.connect("ESP32Client", mqtt_user, mqtt_password)) {
       //Serial.println("connected");
     } else {
+      clearRow(0);
+      clearRow(1);
+      lcd.setCursor(0, 0);
+      lcd.print("MQTT Failed!!");
       Serial.print("failed, rc=");
       Serial.print(mqttClient.state());
       //Serial.println(" try again in 5 seconds");
@@ -251,27 +271,14 @@ void NotifyMQTT(String message) {
   mqttClient.publish(mqtt_topic, message.c_str());
 }
 
-// void //NotifyLine(String message) {
-//   HTTPClient http;
+void NotifyMQTTDashboard(String message) {
+  if (!mqttClient.connected()) {
+    reconnectMQTT();
+  }
+  mqttClient.loop();
+  mqttClient.publish(mqtt_topic2, message.c_str());
+}
 
-//   http.begin("https://notify-api.line.me/api/notify");
-//   http.addHeader("Authorization", "Bearer " + String(LINE_TOKEN));
-//   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-
-//   String encodedMessage = "message=" + urlEncode(message);
-//   int httpCode = http.POST(encodedMessage);
-
-//   if (httpCode > 0) {
-//     String response = http.getString();
-//     //Serial.println(response);
-//   } else {
-//     lcd.setCursor(0, 0);
-//     lcd.print("Disconnect Line Server !!");
-//     //Serial.println("Cannect not connect Line Server");
-//   }
-
-//   http.end();
-// }
 
 String urlEncode(String value) {
   String encodedValue = "";
